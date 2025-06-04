@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+
+  my-sba-Trip:
+    image: openjdk:17
+    container_name: TripSerProIoT
+    ports:
+      - 8081:8080
+      - 8001:8000
+    expose:
+      - "8001"
+    depends_on:
+      - my-db-Trip
+    networks:
+      - my-net
+    volumes:
+      - "${PWD}/build/libs/TripServiceProject-0.0.1-SNAPSHOT.jar:/app/app.jar"
+    working_dir: /app
+    entrypoint: java -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8000 -jar /app/app.jar
+  my-db-Trip:
+    image: mongo:5.0
+    container_name: mongodbIoT-Trip
+    ports:
+      - 27017:27017
+    networks:
+      - my-net
+#networks:
+#  shared-net:
+#    external: true
+networks:
+  my-net:
+    driver:
+      "bridge"
