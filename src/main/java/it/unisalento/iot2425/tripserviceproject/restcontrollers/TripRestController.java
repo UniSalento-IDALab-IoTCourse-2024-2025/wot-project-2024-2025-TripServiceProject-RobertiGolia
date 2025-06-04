@@ -3,6 +3,9 @@ package it.unisalento.iot2425.tripserviceproject.restcontrollers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unisalento.iot2425.tripserviceproject.dto.ResultDTO;
+import it.unisalento.iot2425.tripserviceproject.dto.TripDTO;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -10,6 +13,10 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -40,14 +47,55 @@ public class TripRestController {
         return resultDTO;
     }
 
-    @RequestMapping(value = "/msg/{address}",
-            method = RequestMethod.GET,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResultDTO msg(@PathVariable String address) {
-        System.out.println("address: " + address);
-        System.out.println();
+    @RequestMapping(value = "/travel", method = RequestMethod.GET,
+                    produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResultDTO msg(@RequestBody TripDTO tripDTO) {
+        String googleApiKey = env.getProperty("google.api.key");
+
+        String baseUrl = "https://maps.googleapis.com/maps/api/directions/json";
+        String url = String.format("%s?origin=%s&destination=%s&key=%s", baseUrl,
+                URLEncoder.encode(tripDTO.getAddA(), StandardCharsets.UTF_8),
+                URLEncoder.encode(tripDTO.getAddB(), StandardCharsets.UTF_8),
+                googleApiKey);
+
+        RestTemplate restTemplate = new RestTemplate();
+        String response = restTemplate.getForObject(url, String.class);
+
         ResultDTO resultDTO = new ResultDTO();
-        resultDTO.setResult(ResultDTO.OK);
+        try {
+            JSONObject json = new JSONObject(response);
+            JSONArray routes = json.getJSONArray("routes");
+            if (!routes.isEmpty()) {
+                JSONObject leg = routes.getJSONObject(0).getJSONArray("legs").getJSONObject(0);
+                JSONArray steps = leg.getJSONArray("steps");
+                List<String> instructions = new ArrayList<>();
+
+                for (int i = 0; i < steps.length(); i++) {
+                    JSONObject step = steps.getJSONObject(i);
+                    String htmlInstruction = step.getString("html_instructions");
+                    // Rimuovi i tag HTML se vuoi solo testo semplice
+                    String plainInstruction = htmlInstruction.replaceAll("\\<.*?\\>", "");
+                    instructions.add(plainInstruction);
+                }
+
+
+                String distance = leg.getJSONObject("distance").getString("text");
+                String duration = leg.getJSONObject("duration").getString("text");
+
+                resultDTO.setResult(ResultDTO.OK);
+                resultDTO.setSteps(instructions);
+
+                resultDTO.setMessage("Distanza: " + distance + ", Durata: " + duration);
+            } else {
+                resultDTO.setResult(ResultDTO.ERRORE);
+                resultDTO.setMessage("Nessun percorso trovato.");
+            }
+        } catch (Exception e) {
+            resultDTO.setResult(ResultDTO.ERRORE);
+            resultDTO.setMessage("Errore durante l'elaborazione del percorso.");
+        }
+
         return resultDTO;
     }
+
 }

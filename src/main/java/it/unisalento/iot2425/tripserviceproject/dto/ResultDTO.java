@@ -1,5 +1,6 @@
 package it.unisalento.iot2425.tripserviceproject.dto;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -14,6 +15,7 @@ public class ResultDTO {
     private int result;
     private String message;
     private Map<String, Object> data;
+    private List<String> steps;
 
 
     public int getResult() {
@@ -46,5 +48,13 @@ public class ResultDTO {
 
     public void setData(Map<String, Object> data) {
         this.data = data;
+    }
+
+    public List<String> getSteps() {
+        return steps;
+    }
+
+    public void setSteps(List<String> steps) {
+        this.steps = steps;
     }
 }
