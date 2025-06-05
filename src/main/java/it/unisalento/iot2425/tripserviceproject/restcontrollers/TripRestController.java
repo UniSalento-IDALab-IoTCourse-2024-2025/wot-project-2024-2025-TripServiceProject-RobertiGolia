@@ -2,8 +2,11 @@ package it.unisalento.iot2425.tripserviceproject.restcontrollers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.unisalento.iot2425.tripserviceproject.domain.Trip;
 import it.unisalento.iot2425.tripserviceproject.dto.ResultDTO;
 import it.unisalento.iot2425.tripserviceproject.dto.TripDTO;
+import it.unisalento.iot2425.tripserviceproject.repository.TripRepository;
+import it.unisalento.iot2425.tripserviceproject.security.JwtUtilities;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/trip")
@@ -27,6 +28,13 @@ public class TripRestController {
     private Environment env;
 
     private static final String GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={key}";
+
+    @Autowired
+    private TripRepository tripRepository;
+
+
+    @Autowired
+    private JwtUtilities jwtUtilities;
 
     @RequestMapping(value = "/ricerca/{address}",
             method = RequestMethod.GET,
@@ -49,7 +57,7 @@ public class TripRestController {
 
     @RequestMapping(value = "/travel", method = RequestMethod.GET,
                     produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResultDTO msg(@RequestBody TripDTO tripDTO) {
+    public ResultDTO travel(@RequestBody TripDTO tripDTO) {
         String googleApiKey = env.getProperty("google.api.key");
 
         String baseUrl = "https://maps.googleapis.com/maps/api/directions/json";
@@ -94,6 +102,32 @@ public class TripRestController {
             resultDTO.setResult(ResultDTO.ERRORE);
             resultDTO.setMessage("Errore durante l'elaborazione del percorso.");
         }
+
+        return resultDTO;
+    }
+
+    @RequestMapping(value = "/reserve",
+                    method = RequestMethod.POST,
+                    produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResultDTO prenota(@RequestBody TripDTO tripDTO, @RequestHeader("Authorization") String token){
+        ResultDTO resultDTO = new ResultDTO();
+
+        String jwtToken = token.substring(7);
+        // Verifica e decodifica il token JWT utilizzando il segreto condiviso.
+        Date expirationDate = jwtUtilities.extractExpiration(jwtToken);
+
+        if (expirationDate.before(new Date())) {
+            // Token scaduto
+            return null;
+        }
+        //prende l'id dell'utente per collegarlo ad un mezzo
+        String userId = jwtUtilities.extractClaim(jwtToken, claims -> claims.get("userId", String.class));
+
+        Optional<Trip> trip = tripRepository.findByIdUser(userId);
+
+        trip.ifPresent(t -> {
+
+        });
 
         return resultDTO;
     }

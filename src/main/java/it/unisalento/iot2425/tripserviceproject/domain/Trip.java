@@ -10,6 +10,7 @@ public class Trip {
 
     private String indirizzoA;
     private String indirizzoB;
+    private String idUser;
 
     public String getIndirizzoA() {
         return indirizzoA;
@@ -25,5 +26,21 @@ public class Trip {
 
     public void setIndirizzoB(String indirizzoB) {
         this.indirizzoB = indirizzoB;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getIdUser() {
+        return idUser;
+    }
+
+    public void setIdUser(String idUser) {
+        this.idUser = idUser;
     }
 }

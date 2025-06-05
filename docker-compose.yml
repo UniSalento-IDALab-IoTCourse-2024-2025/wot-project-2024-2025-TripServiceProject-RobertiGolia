@@ -22,7 +22,7 @@ services:
     image: mongo:5.0
     container_name: mongodbIoT-Trip
     ports:
-      - 27017:27017
+      - 27018:27017
     networks:
       - my-net
 #networks:
