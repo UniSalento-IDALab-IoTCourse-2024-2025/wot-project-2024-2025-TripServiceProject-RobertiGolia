@@ -13,7 +13,7 @@ services:
     depends_on:
       - my-db-Trip
     networks:
-      - my-net
+      - shared-net
     volumes:
       - "${PWD}/build/libs/TripServiceProject-0.0.1-SNAPSHOT.jar:/app/app.jar"
     working_dir: /app
@@ -24,11 +24,11 @@ services:
     ports:
       - 27018:27017
     networks:
-      - my-net
-#networks:
-#  shared-net:
-#    external: true
+      - shared-net
 networks:
-  my-net:
-    driver:
-      "bridge"
+  shared-net:
+    external: true
+#networks:
+#  my-net:
+#    driver:
+#      "bridge"

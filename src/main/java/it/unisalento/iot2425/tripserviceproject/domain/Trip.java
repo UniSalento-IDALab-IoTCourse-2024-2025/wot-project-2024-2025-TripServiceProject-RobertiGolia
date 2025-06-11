@@ -10,7 +10,8 @@ public class Trip {
 
     private String indirizzoA;
     private String indirizzoB;
-    private String idUser;
+    private String idUser; //id dell'utente che ha prenotato il viaggio
+    private String idAutista; //id dell'autista che si occuperà del viaggio
 
     public String getIndirizzoA() {
         return indirizzoA;
@@ -42,5 +43,13 @@ public class Trip {
 
     public void setIdUser(String idUser) {
         this.idUser = idUser;
+    }
+
+    public String getIdAutista() {
+        return idAutista;
+    }
+
+    public void setIdAutista(String idAutista) {
+        this.idAutista = idAutista;
     }
 }

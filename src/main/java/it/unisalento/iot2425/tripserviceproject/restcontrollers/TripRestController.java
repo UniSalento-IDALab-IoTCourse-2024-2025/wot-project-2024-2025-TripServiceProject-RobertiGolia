@@ -1,6 +1,7 @@
 package it.unisalento.iot2425.tripserviceproject.restcontrollers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unisalento.iot2425.tripserviceproject.domain.Trip;
 import it.unisalento.iot2425.tripserviceproject.dto.ResultDTO;
@@ -12,9 +13,12 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -32,9 +36,11 @@ public class TripRestController {
     @Autowired
     private TripRepository tripRepository;
 
-
     @Autowired
     private JwtUtilities jwtUtilities;
+
+    @Autowired
+    private WebClient.Builder webClientBuilder;
 
     @RequestMapping(value = "/ricerca/{address}",
             method = RequestMethod.GET,
@@ -47,7 +53,8 @@ public class TripRestController {
 
         // Converte la stringa JSON in una mappa
         ObjectMapper mapper = new ObjectMapper();
-        Map<String, Object> json = mapper.readValue(response, Map.class);
+        Map<String, Object> json = mapper.readValue(response, new TypeReference<Map<String, Object>>() {});
+
         ResultDTO resultDTO = new ResultDTO();
         resultDTO.setResult(ResultDTO.OK);
         resultDTO.setMessage("OK");
@@ -113,22 +120,38 @@ public class TripRestController {
         ResultDTO resultDTO = new ResultDTO();
 
         String jwtToken = token.substring(7);
+
         // Verifica e decodifica il token JWT utilizzando il segreto condiviso.
         Date expirationDate = jwtUtilities.extractExpiration(jwtToken);
-
         if (expirationDate.before(new Date())) {
             // Token scaduto
             return null;
         }
         //prende l'id dell'utente per collegarlo ad un mezzo
+
+        System.out.println(tripDTO.getAddA());
+        System.out.println(tripDTO.getAddB());
+        System.out.println(tripDTO.getIdAutista());
+
         String userId = jwtUtilities.extractClaim(jwtToken, claims -> claims.get("userId", String.class));
+        String url = "http://userSerProIoT:8080/api/users/" + userId;
 
-        Optional<Trip> trip = tripRepository.findByIdUser(userId);
+        WebClient webClient = webClientBuilder.build();
 
-        trip.ifPresent(t -> {
+        String response = webClient.get()
+                .uri(url)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();  // ⏳ Bloccante
 
-        });
+        System.out.println("Risposta arrivata dal payment degli utenti: " + System.currentTimeMillis());
+        System.out.println(response);
 
+
+        System.out.println("Sto dando la risposta all'utente" + System.currentTimeMillis());
+        resultDTO.setMessage("Prenotazione effettuata");
+        resultDTO.setResult(ResultDTO.OK);
         return resultDTO;
     }
 

@@ -18,7 +18,7 @@ import static it.unisalento.iot2425.tripserviceproject.security.SecurityConstant
 public class JwtUtilities {
 
     private Key getSigningKey() {
-        //JWT_SECRET è una chiave simmetrica a 256 bit, condivisa da tutti i microservizi
+        //JWT_SECRET è una chiave simmetrica a 256 bit
         byte[] keyBytes = JWT_SECRET.getBytes();
         return new SecretKeySpec(keyBytes, SignatureAlgorithm.HS256.getJcaName());
     }
@@ -58,7 +58,7 @@ public class JwtUtilities {
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours validity, durata del token
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours validity
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256) // Use the signing key with the new signWith method
                 .compact();
     }
@@ -68,3 +68,4 @@ public class JwtUtilities {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 }
+

@@ -16,6 +16,9 @@ java {
 repositories {
     mavenCentral()
 }
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:unchecked"
+}
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'

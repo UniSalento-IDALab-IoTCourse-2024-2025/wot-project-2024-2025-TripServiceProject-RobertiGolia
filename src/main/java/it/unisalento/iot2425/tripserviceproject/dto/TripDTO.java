@@ -6,6 +6,7 @@ public class TripDTO {
     private String addA; //address
     private String addB;
     private String idUser;
+    private String idAutista;
 
     public String getAddA() {
         return addA;
@@ -37,5 +38,13 @@ public class TripDTO {
 
     public void setIdUser(String idUser) {
         this.idUser = idUser;
+    }
+
+    public String getIdAutista() {
+        return idAutista;
+    }
+
+    public void setIdAutista(String idAutista) {
+        this.idAutista = idAutista;
     }
 }
