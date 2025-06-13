@@ -1,5 +1,7 @@
 package it.unisalento.iot2425.tripserviceproject.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
