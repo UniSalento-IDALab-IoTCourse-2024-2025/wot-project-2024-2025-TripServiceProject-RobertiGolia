@@ -12,6 +12,7 @@ public class Trip {
     private String indirizzoB;
     private String idUser; //id dell'utente che ha prenotato il viaggio
     private String idAutista; //id dell'autista che si occuperà del viaggio
+    private boolean partito;
 
     public String getIndirizzoA() {
         return indirizzoA;
@@ -51,5 +52,13 @@ public class Trip {
 
     public void setIdAutista(String idAutista) {
         this.idAutista = idAutista;
+    }
+
+    public boolean isPartito() {
+        return partito;
+    }
+
+    public void setPartito(boolean partito) {
+        this.partito = partito;
     }
 }

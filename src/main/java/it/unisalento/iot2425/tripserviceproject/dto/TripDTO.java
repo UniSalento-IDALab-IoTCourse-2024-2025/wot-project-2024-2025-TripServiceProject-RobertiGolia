@@ -7,7 +7,7 @@ public class TripDTO {
     private String addB;
     private String idUser;
     private String idAutista;
-
+    private boolean partito;
     public String getAddA() {
         return addA;
     }
@@ -46,5 +46,13 @@ public class TripDTO {
 
     public void setIdAutista(String idAutista) {
         this.idAutista = idAutista;
+    }
+
+    public boolean isPartito() {
+        return partito;
+    }
+
+    public void setPartito(boolean partito) {
+        this.partito = partito;
     }
 }

@@ -125,8 +125,11 @@ public class TripRestController {
         // Verifica e decodifica il token JWT utilizzando il segreto condiviso.
         Date expirationDate = jwtUtilities.extractExpiration(jwtToken);
         if (expirationDate.before(new Date())) {
+            resultDTO.setMessage("Token scaduto");
+            resultDTO.setResult(ResultDTO.ERRORE);
+            resultDTO.setTrip(null);
             // Token scaduto
-            return null;
+            return resultDTO;
         }
         //prende l'id dell'utente per collegarlo ad un mezzo
 
@@ -135,7 +138,7 @@ public class TripRestController {
         System.out.println(tripDTO.getIdAutista());
 
         String userId = jwtUtilities.extractClaim(jwtToken, claims -> claims.get("userId", String.class));
-        String urlUser = "http://userSerProIoT:8080/api/users/" + userId;
+        String urlUser = "https://nci92kc6ri.execute-api.us-east-1.amazonaws.com/dev/users/" + userId;
 
         WebClient webClient = webClientBuilder.build();
 
@@ -159,7 +162,7 @@ public class TripRestController {
         System.out.println("Nome: " + nome);
         System.out.println("Cognome: " + cognome);
 
-        String urlAutista = "http://userSerProIoT:8080/api/users/" + idAutista;
+        String urlAutista = "https://nci92kc6ri.execute-api.us-east-1.amazonaws.com/dev/users/" + idAutista;
         String responseAutista = webClient.get()
                 .uri(urlAutista)
                 .accept(MediaType.APPLICATION_JSON)
@@ -183,7 +186,7 @@ public class TripRestController {
             //il controllo della disponibilità lo si può fare sul front-end, mostrando la lista degli automiobilisti disponibili
 
             //modificare la disponibilità dell'automobilista con una chiamata API
-            String urlModificaDisp = "http://userSerProIoT:8080/api/users/changeDispo/" + idAutista;
+            String urlModificaDisp = "https://nci92kc6ri.execute-api.us-east-1.amazonaws.com/dev/users/changeDispo/" + idAutista;
             String responseDisp = webClient.put()
                     .uri(urlModificaDisp)
                     .accept(MediaType.APPLICATION_JSON)
@@ -205,6 +208,7 @@ public class TripRestController {
             trip.setIdAutista(idAutista);
             trip.setIndirizzoA(tripDTO.getAddA());
             trip.setIndirizzoB(tripDTO.getAddB());
+            trip.setPartito(false);
             tripRepository.save(trip);
             resultDTO.setMessage("Prenotazione effettuata");
             resultDTO.setResult(ResultDTO.OK);
@@ -213,10 +217,35 @@ public class TripRestController {
             resultDTO.setResult(ResultDTO.ERRORE);
         }
 
-
-
-
         return resultDTO;
+    }
+
+    @RequestMapping(value = "/parti/{idTrip}",
+                    method = RequestMethod.PUT,
+                    produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResultDTO parti (@PathVariable String idTrip) {
+        ResultDTO resultDTO = new ResultDTO();
+        Optional<Trip> trip = tripRepository.findById(idTrip);
+        TripDTO tripDTO = new TripDTO();
+        tripDTO.setAddA(trip.get().getIndirizzoA());
+        tripDTO.setAddB(trip.get().getIndirizzoB());
+        tripDTO.setId(trip.get().getId());
+        tripDTO.setIdUser(trip.get().getIdUser());
+        tripDTO.setIdAutista(trip.get().getIdAutista());
+        if (trip.isPresent()) {
+            trip.get().setPartito(true);
+            tripRepository.save(trip.get());
+            resultDTO.setMessage("Partito");
+            resultDTO.setResult(ResultDTO.OK);
+            resultDTO.setTrip(tripDTO);
+            return resultDTO;
+        } else {
+            resultDTO.setMessage("Trip non trovato");
+            resultDTO.setResult(ResultDTO.ERRORE);
+            resultDTO.setTrip(null);
+            return resultDTO;
+        }
+
     }
 
     //fare funzione che ritorna i viaggi in corso
@@ -234,6 +263,29 @@ public class TripRestController {
             tripDTO.setAddB(trip.getIndirizzoB());
             tripDTO.setIdUser(trip.getIdUser());
             tripDTO.setIdAutista(trip.getIdAutista());
+            tripDTO.setPartito(trip.isPartito());
+            tripDTOs.add(tripDTO);
+        }
+        listTripDTO.setUsersList(tripDTOs);
+        return listTripDTO;
+    }
+
+    //fare funzione che ritorna i viaggi in corso
+    @RequestMapping(value = "/corseByIdUser/{idUser}",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            method = RequestMethod.GET)
+    public ListTripDTO getCorseByIdUser(@PathVariable String idUser) {
+        ListTripDTO listTripDTO = new ListTripDTO();
+        List<Trip> trips = tripRepository.findByIdUser(idUser);
+        List<TripDTO> tripDTOs = new ArrayList<>();
+        for (Trip trip : trips) {
+            TripDTO tripDTO = new TripDTO();
+            tripDTO.setId(trip.getId());
+            tripDTO.setAddA(trip.getIndirizzoA());
+            tripDTO.setAddB(trip.getIndirizzoB());
+            tripDTO.setIdUser(trip.getIdUser());
+            tripDTO.setIdAutista(trip.getIdAutista());
+            tripDTO.setPartito(trip.isPartito());
             tripDTOs.add(tripDTO);
         }
         listTripDTO.setUsersList(tripDTOs);
@@ -254,8 +306,9 @@ public class TripRestController {
             return resultDTO;
         }
         Trip t = trip.get(); // Ora è sicuro
+        t.setPartito(false);
 
-        String url = "http://userSerProIoT:8080/api/users/changeDispo/" + trip.get().getIdAutista();
+        String url = "https://nci92kc6ri.execute-api.us-east-1.amazonaws.com/dev/users/changeDispo/" + trip.get().getIdAutista();
         WebClient webClient = webClientBuilder.build();
 
         try {
