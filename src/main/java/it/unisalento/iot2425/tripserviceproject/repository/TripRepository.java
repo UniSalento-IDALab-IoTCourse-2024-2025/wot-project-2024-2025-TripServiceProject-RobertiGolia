@@ -9,5 +9,6 @@ import java.util.Optional;
 public interface TripRepository extends MongoRepository<Trip, String> {
     Optional<Trip> findById(String id);
     List<Trip> findByIdUser(String idUser);
+    List<Trip> findByIdAutista(String idUser);
     Optional<Trip> findByIdAndIdUser(String id, String idUser);
 }

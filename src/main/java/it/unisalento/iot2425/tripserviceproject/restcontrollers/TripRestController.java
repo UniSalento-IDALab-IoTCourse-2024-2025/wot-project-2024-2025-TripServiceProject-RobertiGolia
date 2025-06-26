@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unisalento.iot2425.tripserviceproject.domain.Trip;
+import it.unisalento.iot2425.tripserviceproject.dto.EmailDTO;
 import it.unisalento.iot2425.tripserviceproject.dto.ListTripDTO;
 import it.unisalento.iot2425.tripserviceproject.dto.ResultDTO;
 import it.unisalento.iot2425.tripserviceproject.dto.TripDTO;
@@ -19,6 +20,10 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -277,6 +282,52 @@ public class TripRestController {
     public ListTripDTO getCorseByIdUser(@PathVariable String idUser) {
         ListTripDTO listTripDTO = new ListTripDTO();
         List<Trip> trips = tripRepository.findByIdUser(idUser);
+        List<TripDTO> tripDTOs = new ArrayList<>();
+        for (Trip trip : trips) {
+            TripDTO tripDTO = new TripDTO();
+            tripDTO.setId(trip.getId());
+            tripDTO.setAddA(trip.getIndirizzoA());
+            tripDTO.setAddB(trip.getIndirizzoB());
+            tripDTO.setIdUser(trip.getIdUser());
+            tripDTO.setIdAutista(trip.getIdAutista());
+            tripDTO.setPartito(trip.isPartito());
+            tripDTOs.add(tripDTO);
+        }
+        listTripDTO.setUsersList(tripDTOs);
+        return listTripDTO;
+    }
+    @Autowired
+    private JavaMailSender mailSender;
+
+    @RequestMapping(value = "/sendEmail", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.POST)
+    public ResultDTO sendEmail(@RequestBody EmailDTO emailDTO) {
+        ResultDTO resultDTO = new ResultDTO();
+
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("progettoiotrobertigolia@gmail.com"); // La tua email Gmail
+            message.setTo(emailDTO.getEmail());            // Destinatario passato nel DTO
+            message.setSubject(emailDTO.getSubject());
+            message.setText(emailDTO.getBody());
+
+            mailSender.send(message);
+
+            resultDTO.setMessage("Email inviata!");
+            resultDTO.setResult(ResultDTO.OK);
+        } catch (Exception e) {
+            resultDTO.setMessage("Errore nell'invio: " + e.getMessage());
+            resultDTO.setResult(ResultDTO.ERRORE);
+        }
+
+        return resultDTO;
+    }
+
+    @RequestMapping(value = "/corseByIdAutista/{idAutista}",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            method = RequestMethod.GET)
+    public ListTripDTO getCorseByIdAutista(@PathVariable String idAutista) {
+        ListTripDTO listTripDTO = new ListTripDTO();
+        List<Trip> trips = tripRepository.findByIdAutista(idAutista);
         List<TripDTO> tripDTOs = new ArrayList<>();
         for (Trip trip : trips) {
             TripDTO tripDTO = new TripDTO();
