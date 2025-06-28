@@ -20,10 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -190,6 +188,7 @@ public class TripRestController {
 
             //il controllo della disponibilità lo si può fare sul front-end, mostrando la lista degli automiobilisti disponibili
 
+            /*
             //modificare la disponibilità dell'automobilista con una chiamata API
             String urlModificaDisp = "https://nci92kc6ri.execute-api.us-east-1.amazonaws.com/dev/users/changeDispo/" + idAutista;
             String responseDisp = webClient.put()
@@ -207,7 +206,7 @@ public class TripRestController {
             System.out.println("message: " + message);
             //ora che ho sia l'id dell'utente e dell'autista devo salvare la configurazione all'interno del repository di Trip
             System.out.println("L'utente " + nome + " " + cognome + " ha prenotato la corsa con " + nomeAutista + " " + cognomeAutista);
-
+             */
             Trip trip = new Trip();
             trip.setIdUser(userId);
             trip.setIdAutista(idAutista);
@@ -253,6 +252,30 @@ public class TripRestController {
 
     }
 
+    @RequestMapping(value = "/{idCorsa}",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            method = RequestMethod.GET)
+    public ResultDTO findByIdCorsa(@PathVariable String idCorsa) {
+        ResultDTO resultDTO = new ResultDTO();
+        Optional<Trip> trips = tripRepository.findById(idCorsa);
+        if (trips.isPresent()) {
+            TripDTO tripDTO = new TripDTO();
+            tripDTO.setId(trips.get().getId());
+            tripDTO.setIdUser(trips.get().getIdUser());
+            tripDTO.setIdAutista(trips.get().getIdAutista());
+            tripDTO.setAddB(trips.get().getIndirizzoB());
+            tripDTO.setAddA(trips.get().getIndirizzoA());
+            resultDTO.setResult(ResultDTO.OK);
+            resultDTO.setTrip(tripDTO);
+            resultDTO.setMessage("Corsa trovata");
+        } else {
+            resultDTO.setMessage("Corsa non trovata");
+            resultDTO.setResult(ResultDTO.ERRORE);
+            resultDTO.setTrip(null);
+        }
+        return resultDTO;
+    }
+
     //fare funzione che ritorna i viaggi in corso
     @RequestMapping(value = "/corse",
             produces = MediaType.APPLICATION_JSON_VALUE,
@@ -271,7 +294,7 @@ public class TripRestController {
             tripDTO.setPartito(trip.isPartito());
             tripDTOs.add(tripDTO);
         }
-        listTripDTO.setUsersList(tripDTOs);
+        listTripDTO.setTripList(tripDTOs);
         return listTripDTO;
     }
 
@@ -293,7 +316,7 @@ public class TripRestController {
             tripDTO.setPartito(trip.isPartito());
             tripDTOs.add(tripDTO);
         }
-        listTripDTO.setUsersList(tripDTOs);
+        listTripDTO.setTripList(tripDTOs);
         return listTripDTO;
     }
     @Autowired
@@ -339,7 +362,7 @@ public class TripRestController {
             tripDTO.setPartito(trip.isPartito());
             tripDTOs.add(tripDTO);
         }
-        listTripDTO.setUsersList(tripDTOs);
+        listTripDTO.setTripList(tripDTOs);
         return listTripDTO;
     }
 

@@ -3,13 +3,13 @@ package it.unisalento.iot2425.tripserviceproject.dto;
 import java.util.List;
 
 public class ListTripDTO {
-    private List<TripDTO> usersList;
+    private List<TripDTO> tripsList;
 
-    public List<TripDTO> getUsersList() {
-        return usersList;
+    public List<TripDTO> getTripsList() {
+        return tripsList;
     }
 
-    public void setUsersList(List<TripDTO> usersList) {
-        this.usersList = usersList;
+    public void setTripList(List<TripDTO> usersList) {
+        this.tripsList = usersList;
     }
 }
